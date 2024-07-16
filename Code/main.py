@@ -3,6 +3,8 @@ import imgkit
 
 dictionary={}
 count=0
+
+
 def html_to_image(html_content, output_filename):
     # Specify the path to wkhtmltoimage executable
     path_to_wkhtmltoimage = 'C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltoimage.exe'
@@ -11,6 +13,8 @@ def html_to_image(html_content, output_filename):
     imgkit.from_string(html_content, output_filename, config=imgkit.config(wkhtmltoimage=path_to_wkhtmltoimage,))
 
     print(f"Image saved as {output_filename}")
+
+
 
 def save_image_from_post_request(url, form_data):
     # Perform the POST request with form data
@@ -33,6 +37,7 @@ def save_image_from_post_request(url, form_data):
 
     else:
         print("Failed to retrieve image")
+
 
 
 # Example usage
