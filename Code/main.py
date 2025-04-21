@@ -50,4 +50,3 @@ if __name__ == "__main__":
         for j in range(len(dictionary[i])):
             output_filename =f"{i}_{j}_result.png"
             html_to_image(dictionary[i][j],output_filename)
-
