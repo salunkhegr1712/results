@@ -7,21 +7,35 @@ export GIT_COMMITTER_EMAIL="salunkhegr1712@gmail.com"
 
 cd coding-practice-history || exit
 
-# Shuffle available .java files
 all_files=($(ls *.java | sort -R))
 total_files=${#all_files[@]}
 file_index=0
 commit_id=1
-
-# Start from 60 days ago, skip Saturdays & Sundays
 days_back=0
 weekday_commits=0
+skipped_weekdays=0
+week_counter=0
 
 while (( weekday_commits < 60 )); do
-    commit_day=$(date --date="$days_back days ago" +%u)  # 1=Mon, ..., 7=Sun
+    day_of_week=$(date --date="$days_back days ago" +%u)  # 1=Mon, ..., 7=Sun
 
-    if [[ "$commit_day" -lt 6 ]]; then  # Weekday
-        commits_today=$(( (RANDOM % 3) + 1 ))  # 1–3 commits
+    if [[ "$day_of_week" -lt 6 ]]; then  # Weekday
+        # Start of a new week? Reset skip control
+        if (( weekday_commits % 5 == 0 )); then
+            skip_day=$(( RANDOM % 5 ))  # Randomly skip one weekday this week (0–4)
+            skipped_today=0
+        fi
+
+        # Skip this day if it matches the random skip
+        if (( (weekday_commits % 5) == skip_day )); then
+            echo "🚫 Skipping weekday $((weekday_commits + 1)) for realism"
+            ((weekday_commits++))
+            ((days_back++))
+            continue
+        fi
+
+        # Random number of commits (1–3) on this day
+        commits_today=$(( (RANDOM % 3) + 1 ))
 
         for ((c=1; c<=commits_today; c++)); do
             num_files=$(( (RANDOM % 6) + 1 ))  # 1–6 files
@@ -34,12 +48,12 @@ while (( weekday_commits < 60 )); do
                 ((file_index++))
             done
 
-            # Random modification (~20%)
+            # Randomly modify one of the files (~20%)
             if (( RANDOM % 5 == 0 )) && [[ -f "${commit_files[0]}" ]]; then
                 echo "// ✏️ Edited on simulated weekday $((weekday_commits + 1))" >> "${commit_files[0]}"
             fi
 
-            # Random deletion (~10%)
+            # Randomly delete a file (~10%)
             if (( RANDOM % 10 == 0 )); then
                 rand_del_index=$(( RANDOM % total_files ))
                 del_file="${all_files[$rand_del_index]}"
@@ -50,15 +64,14 @@ while (( weekday_commits < 60 )); do
                 fi
             fi
 
-            # Commit time
-            hour=$((RANDOM % 8 + 10))  # 10am–5pm
+            # Simulated commit time
+            hour=$(( RANDOM % 8 + 10 ))  # 10 AM to 5 PM
             commit_date=$(date --date="$days_back days ago $hour:00" +"%Y-%m-%dT%H:%M:%S")
 
-            # Git commit
+            # Commit
             git add "${commit_files[@]}" 2>/dev/null
             GIT_AUTHOR_DATE="$commit_date" GIT_COMMITTER_DATE="$commit_date" \
               git commit -m "[$commit_id] Day $((weekday_commits + 1)): Add ${#commit_files[@]} Java file(s)"
-
             ((commit_id++))
         done
 
@@ -67,9 +80,8 @@ while (( weekday_commits < 60 )); do
 
     ((days_back++))
 
-    # Safety exit
     if (( file_index >= total_files )); then
-        echo "✅ All files used after $weekday_commits weekdays."
+        echo "✅ All files committed after $weekday_commits weekdays."
         break
     fi
 done
